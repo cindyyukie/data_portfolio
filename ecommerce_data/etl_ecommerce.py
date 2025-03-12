@@ -11,10 +11,26 @@ print("📂 Arquivos disponíveis:", arquivos)
 # Carregar o dataset de pedidos (olist_orders_dataset.csv)
 df_orders = pd.read_csv(os.path.join(data_path, "olist_orders_dataset.csv"))
 
-# Exibir as primeira linhas do dataset
-print("\n📌 Primeiras linhas do dataset de pedidos:")
-print(df_orders.head())
+# Converter colunas de data para datetime
+date_columns = [
+    "order_purchase_timestamp",
+    "order_approved_at",
+    "order_delivered_carrier_date",
+    "order_delivered_customer_date",
+    "order_estimated_delivery_date"
+]
 
-# Exibir informações sobre o dataset
-print("\n📊 Informações sobre o dataset:")
-print(df_orders.info())
+for col in date_columns:
+    df_orders[col] = pd.to_datetime(df_orders[col])
+
+# Verificar valores nulos
+missing_values = df_orders.isnull().sum()
+
+# Criar nova coluna com o tempo de entrega (dias)
+df_orders["delivery_time_days"] = (df_orders["order_delivered_customer_date"] - df_orders["order_purchase_timestamp"]).dt.days
+
+# Exibir resumo dos dados transformados
+print("\n📌 Dados Transformados:")
+print(df_orders.head())
+print("\n📊 Valores Nulos por coluna:")
+print(missing_values)
