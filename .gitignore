@@ -1,1 +1,5 @@
+# Ignorar arquivos do macOS
 .DS_Store
+
+# Ignorar arquivos CSV grandes
+ecommerce_data/*.csv
