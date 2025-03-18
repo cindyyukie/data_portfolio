@@ -1,36 +1,47 @@
-import pandas as pd
 import os
+import pandas as pd
 
-# Definir o caminho da pasta onde os arquivos CSV estão armazenados
-data_path = "/Users/cindydelvalle/Projects/data_portfolio/ecommerce_data/"
+# Definir caminho dos arquivos
+DATA_PATH = "ecommerce_data"
 
-# Listar arquivos disponíveis na pasta
-arquivos = os.listdir(data_path)
-print("📂 Arquivos disponíveis:", arquivos)
+# 1️⃣ Extração - Carregar os datasets
+def load_data(file_name):
+    file_path = os.path.join(DATA_PATH, file_name)
+    return pd.read_csv(file_path)
 
-# Carregar o dataset de pedidos (olist_orders_dataset.csv)
-df_orders = pd.read_csv(os.path.join(data_path, "olist_orders_dataset.csv"))
+# 2️⃣ Transformação - Ajustes nos dados
+def transform_data(df):
+    date_columns = [
+        "order_purchase_timestamp", "order_approved_at", 
+        "order_delivered_carrier_date", "order_delivered_customer_date", 
+        "order_estimated_delivery_date"
+    ]
 
-# Converter colunas de data para datetime
-date_columns = [
-    "order_purchase_timestamp",
-    "order_approved_at",
-    "order_delivered_carrier_date",
-    "order_delivered_customer_date",
-    "order_estimated_delivery_date"
-]
+    for col in date_columns:
+        df[col] = pd.to_datetime(df[col])
 
-for col in date_columns:
-    df_orders[col] = pd.to_datetime(df_orders[col])
+    # Criar nova coluna: tempo de entrega em dias
+    df["delivery_time_days"] = (df["order_delivered_customer_date"] - df["order_purchase_timestamp"]).dt.days
 
-# Verificar valores nulos
-missing_values = df_orders.isnull().sum()
+    return df
 
-# Criar nova coluna com o tempo de entrega (dias)
-df_orders["delivery_time_days"] = (df_orders["order_delivered_customer_date"] - df_orders["order_purchase_timestamp"]).dt.days
+# 3️⃣ Carga - Salvar os dados transformados
+def save_data(df, output_file):
+    output_path = os.path.join(DATA_PATH, output_file)
+    df.to_csv(output_path, index=False)
+    print(f"✅ Dados transformados salvos em: {output_path}")
 
-# Exibir resumo dos dados transformados
-print("\n📌 Dados Transformados:")
-print(df_orders.head())
-print("\n📊 Valores Nulos por coluna:")
-print(missing_values)
+# 🚀 Executar o pipeline ETL
+if __name__ == "__main__":
+    print("🔄 Iniciando pipeline ETL...")
+    
+    df_orders = load_data("olist_orders_dataset.csv")
+    df_orders = transform_data(df_orders)
+    
+    print("\n📌 Primeiras linhas dos dados transformados:")
+    print(df_orders.head())
+
+    print("\n📌 Valores nulos por coluna:")
+    print(df_orders.isnull().sum())
+
+    save_data(df_orders, "orders_transformed.csv")
